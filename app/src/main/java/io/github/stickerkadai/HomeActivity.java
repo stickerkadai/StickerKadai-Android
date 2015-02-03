@@ -3,10 +3,8 @@ package io.github.stickerkadai;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -24,8 +22,6 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
 
-import org.json.JSONArray;
-
 public class HomeActivity extends Activity {
 
     String[] imageUrls;
@@ -38,8 +34,12 @@ public class HomeActivity extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.fr_image_grid);
-
-        getStickersList();
+        try {
+            Constants.IMAGES = (String[]) new StickersListRetriever().execute(this).get();
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
 
         imageUrls = Constants.IMAGES;
 
@@ -78,7 +78,7 @@ public class HomeActivity extends Activity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
             case R.id.refresh:
-                getStickersList();
+                new StickersListRetriever().execute(this);
                 listView.invalidateViews();
                 break;
             case R.id.contactus:
@@ -91,30 +91,6 @@ public class HomeActivity extends Activity {
         return true;
 	}
 
-    private void getStickersList(){
-        JSONArray StickersArray = null;
-        try {
-            StickersArray = (JSONArray) new JSONObjectRetriever().execute("http://stickerkadai.github.io/stickers.json").get();
-            PreferenceManager.getDefaultSharedPreferences(this).edit().putString("io.github.stickerkadai.Stickers", StickersArray.toString()).commit();
-        }
-        catch (Exception e){
-            Toast.makeText(this,"Network Unavailable. Using cache.",Toast.LENGTH_SHORT);
-            PreferenceManager.getDefaultSharedPreferences(this).edit().putString("io.github.stickerkadai.Stickers", "").commit();
-        }
-        try {
-            SharedPreferences sp = this.getSharedPreferences("io.github.stickerkadai.Stickers", getApplicationContext().MODE_PRIVATE);
-            String Stickers="";
-            sp.getString(Stickers, "");
-            StickersArray = new JSONArray(Stickers);
-            int noOfStickers = StickersArray.length();
-            Constants.IMAGES = new String[noOfStickers];
-            for (int i = 0; i < noOfStickers; i++)
-                Constants.IMAGES[i] = "http://stickerkadai.github.io/Stickers/" + StickersArray.getJSONObject(i).getString("path");
-        }
-        catch (Exception e){
-            e.printStackTrace();
-        }
-    }
 
 
     public class ImageAdapter extends BaseAdapter {

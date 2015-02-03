@@ -38,6 +38,12 @@ public class SimpleImageActivity extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
         setContentView(R.layout.fr_image_pager);
+        try {
+            Constants.IMAGES = (String[]) new StickersListRetriever().execute(this).get();
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
 
         imageUrls = Constants.IMAGES;
 
